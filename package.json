@@ -1,0 +1,39 @@
+{
+  "name": "triangular",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "start": "./scripts/start-app.sh",
+    "app": "./scripts/start-app.sh",
+    "deploy": "export PROJECT_NAME=`cat project_name` && cd dist && gcloud app deploy --project $PROJECT_NAME",
+    "test": "npx jest --coverage"
+  },
+  "author": "Michael Jonathan Lee",
+  "dependencies": {
+    "p5": "^0.7.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.0.0",
+    "@babel/plugin-proposal-class-properties": "^7.1.0",
+    "@babel/plugin-proposal-decorators": "^7.0.0",
+    "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
+    "@babel/preset-env": "^7.0.0",
+    "babel-loader": "^8.0.2",
+    "clean-webpack-plugin": "^0.1.19",
+    "copy-webpack-plugin": "^4.5.4",
+    "css-loader": "^1.0.0",
+    "git-revision-webpack-plugin": "^3.0.3",
+    "html-webpack-plugin": "^3.1.0",
+    "jest": "^23.6.0",
+    "jest-extended": "^0.11.0",
+    "node-sass": "^4.8.3",
+    "sass-loader": "^7.1.0",
+    "style-loader": "^0.23.0",
+    "webpack": "^4.5.0",
+    "webpack-cli": "^3.1.0",
+    "webpack-dev-server": "^3.1.1"
+  },
+  "jest": {
+    "setupTestFrameworkScriptFile": "jest-extended"
+  }
+}
