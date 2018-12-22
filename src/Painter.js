@@ -1,14 +1,14 @@
-import ColorIter from './ColorIter'
 import {Vector} from 'p5'
 import {colorToValue, valueToColor} from "./Color"
 import {ComponentTypes} from "./Mesh"
 
-const VERTEX_SIZE      = 20
-const EDGES_OFFSET     = 0x000fff
-const FACES_OFFSET     = 0x00ff00
-const VERTICES_OFFSET  = 0xff0000
+const VERTEX_SIZE      = 3
+const EDGE_SIZE        = 2
+const TRIANGLE_COLOR   = '#3e5f93'
+const EDGE_COLOR       = '#47774b'
+const VERTEX_COLOR     = '#7f5d89'
 
-export default class HitmapPainter {
+export default class Painter {
     constructor(mesh) {
         this._mesh = mesh
     }
@@ -17,10 +17,8 @@ export default class HitmapPainter {
         const mesh = this._mesh
 
         s.noStroke()
-        const color = ColorIter(FACES_OFFSET)
         for (let face of mesh.faces()) {
-            const c = color.next().value
-            s.fill(s.color(...c))
+            s.fill(TRIANGLE_COLOR)
             const vertices = []
             for (let vertex of face.vertices()) {
                 vertices.push(vertex.x)
@@ -33,15 +31,10 @@ export default class HitmapPainter {
     paintEdges(s) {
         const mesh = this._mesh
 
-        s.strokeWeight(Math.floor(VERTEX_SIZE / 2))
-        const color = ColorIter(EDGES_OFFSET)
+        s.strokeWeight(EDGE_SIZE)
         for (let edge of mesh.edges()) {
-            const c = color.next().value
-            s.stroke(c)
-            const [v1, v2] = edge.vertices().map(v => v.copy())
-            const offset = edge.normal().mult(VERTEX_SIZE / 8)
-            v1.add(offset)
-            v2.add(offset)
+            s.stroke(EDGE_COLOR)
+            const [v1, v2] = edge.vertices()
             s.line(v1.x, v1.y, v2.x, v2.y)
         }
     }
@@ -50,10 +43,8 @@ export default class HitmapPainter {
         const mesh = this._mesh
 
         s.noStroke()
-        const color = ColorIter(VERTICES_OFFSET)
         for (let vertex of mesh.vertices()) {
-            const c = color.next().value
-            s.fill(s.color(...c))
+            s.fill(VERTEX_COLOR)
             s.ellipse(vertex.x, vertex.y, VERTEX_SIZE)
         }
     }
@@ -62,6 +53,7 @@ export default class HitmapPainter {
         try {
             const mesh = this._mesh
             const value = colorToValue(...colorValue)
+            console.log(value, colorValue, valueToColor(value))
             if (value >= VERTICES_OFFSET) {
                 const index = value - VERTICES_OFFSET
                 return {

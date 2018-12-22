@@ -3,30 +3,43 @@ import 'p5/lib/addons/p5.sound'
 import 'p5/lib/addons/p5.dom'
 import Mesh from './Mesh'
 import HitmapPainter from './HitmapPainter'
+import Painter from './Painter'
+import HighlightPainter from "./HighlightPainter"
 
 import './style.scss'
+
 
 const mesh = new Mesh()
 let vertexAcc = []
 
 let hp
+let rp
+let lp
+let hitmap
+let render
+let hover
 
 new p5((s) => {
     s.setup = () => {
         s.frameRate(5)
 
-        const c = s.createCanvas(window.innerWidth, window.innerHeight)
-        c.addClass('main-area')
-        s.background(0)
+        //const hitmap = s.createCanvas(window.innerWidth, window.innerHeight)
+        const canvas = s.createCanvas(1280, 480)
+        canvas.addClass('main-area')
+        hitmap = s.createGraphics(640, 480)
+        render = s.createGraphics(640, 480)
         hp = new HitmapPainter(mesh)
+        rp = new Painter(mesh)
+        lp = new HighlightPainter(mesh)
     }
 
     s.mouseMoved = () => {
-        const c = s.get(s.mouseX, s.mouseY)
-        const e = hp.element(c)
-        if (e !== null) {
-            console.log(e)
+        const hitColor = s.get(s.mouseX, s.mouseY)
+        const hitElement = hp.element(hitColor)
+        if (hitElement !== null) {
+            console.log(hitElement)
         }
+        hover = hitElement
     }
 
     s.mouseClicked = () => {
@@ -43,9 +56,20 @@ new p5((s) => {
     }
 
     s.draw = () => {
-        s.background(0)
-        hp.paintTriangles(s)
-        hp.paintEdges(s)
-        hp.paintVertices(s)
+        hitmap.background(0)
+        render.background('white')
+
+        hp.paintTriangles(hitmap)
+        hp.paintEdges(hitmap)
+        hp.paintVertices(hitmap)
+        rp.paintTriangles(render)
+        rp.paintEdges(render)
+        rp.paintVertices(render)
+        if (hover) {
+            lp.paint(render, hover)
+        }
+
+        s.image(hitmap, 0, 0)
+        s.image(render, 640, 0)
     }
 })
