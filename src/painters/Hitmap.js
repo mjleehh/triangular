@@ -1,20 +1,32 @@
-import ColorIter from './ColorIter'
+import ColorIter from '../ColorIter'
 import {Vector} from 'p5'
-import {colorToValue, valueToColor} from "./Color"
-import {ComponentTypes} from "./Mesh"
+import {colorToValue, valueToColor} from "../Color"
+import {ComponentTypes} from "../mesh/Mesh"
 
 const VERTEX_SIZE      = 20
 const EDGES_OFFSET     = 0x000fff
 const FACES_OFFSET     = 0x00ff00
 const VERTICES_OFFSET  = 0xff0000
 
-export default class HitmapPainter {
-    constructor(mesh) {
+export default class Hitmap {
+    /**
+     * the mesh is part of the hitmap painter's state
+     */
+    constructor(mesh, canvas) {
         this._mesh = mesh
+        this._canvas = canvas
     }
 
-    paintTriangles(s) {
+    paint() {
+        this._canvas.background(0)
+        this.paintTriangles()
+        this.paintEdges()
+        this.paintVertices()
+    }
+
+    paintTriangles() {
         const mesh = this._mesh
+        const s = this._canvas
 
         s.noStroke()
         const color = ColorIter(FACES_OFFSET)
@@ -30,8 +42,9 @@ export default class HitmapPainter {
         }
     }
 
-    paintEdges(s) {
+    paintEdges() {
         const mesh = this._mesh
+        const s = this._canvas
 
         s.strokeWeight(Math.floor(VERTEX_SIZE / 2))
         const color = ColorIter(EDGES_OFFSET)
@@ -46,8 +59,9 @@ export default class HitmapPainter {
         }
     }
 
-    paintVertices(s) {
+    paintVertices() {
         const mesh = this._mesh
+        const s = this._canvas
 
         s.noStroke()
         const color = ColorIter(VERTICES_OFFSET)
@@ -58,7 +72,8 @@ export default class HitmapPainter {
         }
     }
 
-    element(colorValue) {
+    get(x, y) {
+        const colorValue = this._canvas.get(x, y)
         try {
             const mesh = this._mesh
             const value = colorToValue(...colorValue)
@@ -67,18 +82,30 @@ export default class HitmapPainter {
                 return {
                     type: ComponentTypes.VERTEX,
                     vertex: mesh.vertex(index),
+                    x,
+                    y,
                 }
             } else if (value >= FACES_OFFSET) {
                 const index = value - FACES_OFFSET
                 return {
                     type: ComponentTypes.FACE,
                     face: mesh.face(index),
+                    x,
+                    y,
                 }
             } else if (value >= EDGES_OFFSET) {
                 const index = value - EDGES_OFFSET
                 return {
                     type: ComponentTypes.EDGE,
                     edge: mesh.edge(index),
+                    x,
+                    y,
+                }
+            } else {
+                return {
+                    type: ComponentTypes.NONE,
+                    x,
+                    y,
                 }
             }
         } catch (e) {}
@@ -86,4 +113,5 @@ export default class HitmapPainter {
     }
 
     _mesh = null
+    _canvas = null
 }

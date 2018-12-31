@@ -1,13 +1,17 @@
-import p5, {Vector} from 'p5'
+import Vector from './Vector'
+import _ from 'lodash'
+
 
 export const ComponentTypes = {
     VERTEX: Symbol('VERTEX'),
     EDGE:   Symbol('EDGE'),
     FACE:   Symbol('FACE'),
+    NONE:   Symbol('NONE'),
+
 }
 Object.freeze(ComponentTypes)
 
-class Face {
+export class Face {
     constructor(firstEdge, label = "") {
         this.firstEdge = firstEdge
         this.label = ""
@@ -17,7 +21,7 @@ class Face {
     label = ""
 }
 
-class Edge {
+export class Edge {
     constructor(next, vertex, other = -1) {
         this.next = next
         this.vertex = vertex
@@ -55,13 +59,13 @@ class FaceProxy {
 
 class EdgeProxy {
     constructor(index, mesh) {
-        this._index = index
+        this.index = index
         this._mesh = mesh
     }
 
     vertices() {
         if (!this._vertices) {
-            const index = this._index
+            const {index} = this
             const edges = this._mesh._edges
             const edge = edges[index]
             const nextNext = edges[edges[edge.next].next]
@@ -75,40 +79,40 @@ class EdgeProxy {
         return this._vertices
     }
 
+    other() {
+        const {other} = this._mesh._edges[this.index]
+        if (other >= 0) {
+            return new EdgeProxy(other)
+        }
+        return null
+    }
+
     normal() {
         const [v1, v2] = this.vertices()
         const direction = Vector.sub(v2, v1)
         return (new Vector(direction.y, -direction.x)).normalize()
     }
 
-    _index = -1
+    index = -1
     _mesh = null
     _vertices = null
 }
 
 export default class Mesh {
-    addUnconnected(vertex1, vertex2, vertex3) {
-        const newVertices = [vertex1, vertex2, vertex3]
-        const v1 = p5.Vector.sub(vertex2, vertex1)
-        const v2 = p5.Vector.sub(vertex3, vertex2)
-        const orientation = p5.Vector.cross(v1, v2)
-        if (orientation.z > 0) {
-            console.log('reverse')
-            newVertices.reverse()
+    constructor(vertices = [], edges = [], faces = []) {
+        if (!_.isArray(vertices)) {
+            throw 'invalid mesh vertices'
+        }
+        if (!_.isArray(edges)) {
+            throw 'invalid mesh edges'
+        }
+        if (!_.isArray(faces)) {
+            throw 'invalid mesh faces'
         }
 
-        const vertices = this._vertices
-        const vertexOffset = vertices.length
-        this._vertices = vertices.concat(newVertices)
-
-        const edges = this._edges
-        const edgeOffset = edges.length
-        this._edges = edges.concat([
-            new Edge(edgeOffset + 1, vertexOffset + 1),
-            new Edge(edgeOffset + 2, vertexOffset + 2),
-            new Edge(edgeOffset + 0, vertexOffset + 0),
-        ])
-        this._faces.push(new Face(edgeOffset))
+        this._vertices = vertices
+        this._edges = edges
+        this._faces = faces
     }
 
     face(index) {
@@ -152,6 +156,24 @@ export default class Mesh {
 
     vertices() {
         return this._vertices
+    }
+
+    isEmpty() {
+        return _faces.length < 1
+    }
+
+    static fromJson(json) {
+        const {vertices, edges, faces} = JSON.parse(json)
+        const vectors = vertices.map(e => new Vector(e.x, e.y))
+        return new Mesh(vectors, edges, faces)
+    }
+
+    toJson() {
+        return JSON.stringify({
+            vertices: this._vertices,
+            edges: this._edges,
+            faces: this._faces,
+        })
     }
 
     _faces = []
